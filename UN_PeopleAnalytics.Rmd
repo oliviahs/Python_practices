@@ -1,0 +1,257 @@
+---
+title: "UN_PeopleAnalytics"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+<Proportional Odds Logistic Regression for Ordered Category Outcomes>
+Reference: https://peopleanalytics-regression-book.org/ord-reg.html
+
+In medical settings, the difference between moving from a healthy to an early-stage disease may not be equivalent to moving from an early-stage disease to an intermediate- or advanced-stage. Equally, it may be a much bigger psychological step for an individual to say that they are very dissatisfied in their work than it is to say that they are very satisfied in their work.
+
+Therefore, in the proportional odds model, we ‘divide’ the probability space at each level of the outcome variable and consider each as a binomial logistic regression model. For example, at rating 3, we generate a binomial logistic regression model of 
+P(y>τ3).
+
+Proportional odds logistic regression can be used when there are more than two outcome categories that have an order. An important underlying assumption is that no input variable has a disproportionate effect on a specific level of the outcome variable. This is known as the proportional odds assumption. This assumption means that the ‘slope’ of the logistic function is the same for all category cutoffs
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+```
+ 
+```{r}
+d <- read.csv("finaldf2.csv")
+```
+
+```{r}
+head(d)   
+```
+
+```{r}
+#View(d)
+```
+
+performance_level = {'Performance below standards':0,'Low Achievement':1,
+                     'Partially successful performance':2, 'Solid Achievement':3, 
+                     'Successful performance':4, 'Successful PLUS performance':4,
+                    'Outstanding Achievement':5}
+
+```{r}
+# change to ordered factor
+
+d$Performance_mean <- ordered(d$Performance_mean, levels = c("0","1","2","3","4","5"))
+
+d$Age <- ordered(d$Age, levels = c("24.5","34.5","44.5","54.5","64.5"))
+
+d$Hardship_min <- ordered(d$Hardship_min , levels = c("0","1","2","3","4","5"))
+
+d$Hardship_max <- ordered(d$Hardship_max, levels = c("0","1","2","3","4","5"))
+
+d$Hardship_median <- as.integer(d$Hardship_median) 
+d$Hardship_median <- ordered(d$Hardship_median, levels = c("0","1","2","3","4","5"))
+
+d$Min_Incumbent <- ordered(d$Min_Incumbent, levels = c("1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"))
+
+d$Max_Incumbent <- ordered(d$Max_Incumbent, levels = c("1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"))
+
+d$Difference_incumbent <- ordered(d$Difference_incumbent, levels = c("0","1","2","3","4","5","6","7","8","9","10","11","12","13"))
+```
+
+```{r}
+# Change to factor
+categories <- c("Organization", "Gender", "Nationality", "DS.Location", "DS.Country", "Family.Non.Family")
+
+d[ ,categories] <- lapply(d[ ,categories], as.factor)
+```
+
+
+```{r}
+library(dplyr)
+d1 = select(d, -c("Index.No","Nationality","DS.Location","DS.Country","Hire.Date")) 
+length(colnames(d1))
+```
+
+```{r}
+group0 <- select(d1, c("Organization","Gender","Family.Non.Family","Hardship_min","Hardship_median","Hardship_max","Performance_mean"))
+group000 <- select(d1, c("Min_Incumbent","Max_Incumbent","Difference_incumbent"))
+```
+
+```{r}
+d2 = select(d1, -c("Organization","Gender","Family.Non.Family","Hardship_min","Hardship_median","Hardship_max","Min_Incumbent","Max_Incumbent","Performance_mean","Difference_incumbent"))
+length(colnames(d2))
+```
+
+
+```{r}
+group1 = d2[c(1:10)]
+group2 = d2[c(11:20)]
+group3 = d2[c(21:30)]
+group4 = d2[c(31:40)]
+group5 = d2[c(41:50)]
+group6 = d2[c(51:60)]
+```
+
+
+```{r}
+library(tidyr)
+library(ggplot2)
+```
+
+```{r}
+group000 %>% gather() %>% group_by(key) %>% arrange(value) %>% 
+  ggplot(aes(as.numeric(value), fill = key, color = key)) + geom_bar() + 
+  facet_wrap(~key, scale='free_x') + 
+  theme_classic() + 
+  theme(legend.position="none") + xlab(" ")
+```
+```{r}
+ggplot(gather(group0) ,aes(value, fill = key, color = key)) + geom_bar() + 
+  facet_wrap(~key, scale='free_x') + 
+  theme_classic() + 
+  theme(legend.position="none")+ xlab(" ")
+```
+
+
+```{r}
+group1 %>% gather() %>% group_by(key) %>% arrange(value) %>% 
+  ggplot(aes(as.numeric(value), fill = key, color = key)) + geom_bar() + 
+  facet_wrap(~key, scale='free_x') + 
+  theme_classic() + 
+  theme(legend.position="none")+ xlab(" ")
+```
+```{r}
+group2 %>% gather() %>% group_by(key) %>% arrange(value) %>% 
+  ggplot(aes(as.numeric(value), fill = key, color = key)) + geom_bar() + 
+  facet_wrap(~key, scale='free_x') + 
+  theme_classic() + 
+  theme(legend.position="none")+ xlab(" ")
+
+```
+```{r}
+group3 %>% gather() %>% group_by(key) %>% arrange(value) %>% 
+  ggplot(aes(as.numeric(value), fill = key, color = key)) + geom_bar() + 
+  facet_wrap(~key, scale='free_x') + 
+  theme_classic() + 
+  theme(legend.position="none")+ xlab(" ")
+
+```
+```{r}
+group4 %>% gather() %>% group_by(key) %>% arrange(value) %>% 
+  ggplot(aes(as.numeric(value), fill = key, color = key)) + geom_bar() + 
+  facet_wrap(~key, scale='free_x') + 
+  theme_classic() + 
+  theme(legend.position="none")+ xlab(" ")
+
+```
+```{r}
+group5 %>% gather() %>% group_by(key) %>% arrange(value) %>% 
+  ggplot(aes(as.numeric(value), fill = key, color = key)) + geom_bar() + 
+  facet_wrap(~key, scale='free_x') + 
+  theme_classic() + 
+  theme(legend.position="none")+ xlab(" ")
+
+```
+```{r}
+group6 %>% gather() %>% group_by(key) %>% arrange(value) %>% 
+  ggplot(aes(as.numeric(value), fill = key, color = key)) + geom_bar() + 
+  facet_wrap(~key, scale='free_x') + 
+  theme_classic() + 
+  theme(legend.position="none")+ xlab(" ")
+
+```
+
+
+```{r}
+str(d) 
+```
+
+
+```{r}
+library(MASS)
+```
+
+```{r}
+polr_model <- polr(formula = Performance_mean ~ Organization + Gender + Family.Non.Family + Position_Count + Years.of.Service + Age + Max_Incumbent + Hardship_max, data = d, Hess=TRUE)
+
+summary(polr_model)
+```
+
+```{r}
+#install.packages("brant")
+#library(brant)
+# brant::brant(polr_model)
+```
+# Error in solve.default(D %*% varBeta %*% t(D)) : system is computationally singular: reciprocal condition number = 5.56905e-17
+
+
+```{r}
+str(d$Performance_mean)
+```
+
+```{r}
+# create binary variable 
+d$zero <- ifelse(d$Performance_mean == "0", 1, 0)
+
+d$one <- ifelse(d$Performance_mean == "1", 1, 0)
+
+d$two <- ifelse(d$Performance_mean == "2", 1, 0)
+
+d$three <- ifelse(d$Performance_mean == "3", 1, 0)
+
+d$four <- ifelse(d$Performance_mean == "4", 1, 0)
+
+d$five <- ifelse(d$Performance_mean == "5", 1, 0)
+
+```
+
+
+```{r}
+zero_model <- glm(zero ~ Organization + Gender + Family.Non.Family + Position_Count + Years.of.Service + Age + Max_Incumbent + Hardship_max, data = d, family = "binomial")
+
+one_model <- glm(one ~ Organization + Gender + Family.Non.Family + Position_Count + Years.of.Service + Age + Max_Incumbent + Hardship_max, data = d, family = "binomial")
+
+two_model <- glm(two ~ Organization + Gender + Family.Non.Family + Position_Count + Years.of.Service + Age + Max_Incumbent + Hardship_max, data = d, family = "binomial")
+
+three_model <- glm(three ~ Organization + Gender + Family.Non.Family + Position_Count + Years.of.Service + Age + Max_Incumbent + Hardship_max, data = d, family = "binomial")
+
+four_model <- glm(four ~ Organization + Gender + Family.Non.Family + Position_Count + Years.of.Service + Age + Max_Incumbent + Hardship_max, data = d, family = "binomial")
+
+five_model <- glm(five ~ Organization + Gender + Family.Non.Family + Position_Count + Years.of.Service + Age + Max_Incumbent + Hardship_max, data = d, family = "binomial")
+
+```
+
+```{r}
+(coefficient_comparison <- data.frame(
+  zero_model = summary(zero_model)$coefficients[ , "Estimate"],
+  one_model = summary(one_model)$coefficients[ , "Estimate"],
+  two_model = summary(two_model)$coefficients[ , "Estimate"],
+  three_model = summary(three_model)$coefficients[ , "Estimate"],
+  four_model = summary(four_model)$coefficients[ , "Estimate"],
+  five_model = summary(five_model)$coefficients[ , "Estimate"]
+))
+```
+
+# Ignoring the intercept, which is not of concern here, the differences appear relatively small. Large differences in coefficients would indicate that the proportional odds assumption is likely violated and alternative approaches to the problem should be considered.
+
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
