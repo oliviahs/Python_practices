@@ -1,8 +1,8 @@
 ---
 title: "UN_PeopleAnalytics"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 <Proportional Odds Logistic Regression for Ordered Category Outcomes>
@@ -24,6 +24,7 @@ library(readr)
 ```
  
 ```{r}
+setwd("/Users/oliviashin/Desktop/SB/CareerTrack/Capstone2/2020_WPAC_CaseCompetition/Data")
 d <- read.csv("finaldf2.csv")
 ```
 
@@ -45,25 +46,27 @@ performance_level = {'Performance below standards':0,'Low Achievement':1,
 
 d$Performance_mean <- ordered(d$Performance_mean, levels = c("0","1","2","3","4","5"))
 
-d$Age <- ordered(d$Age, levels = c("24.5","34.5","44.5","54.5","64.5"))
+#d$Age <- ordered(d$Age, levels = c("24.5","34.5","44.5","54.5","64.5"))
 
-d$Hardship_min <- ordered(d$Hardship_min , levels = c("0","1","2","3","4","5"))
+#d$Hardship_min <- ordered(d$Hardship_min , levels = c("0","1","2","3","4","5"))
 
-d$Hardship_max <- ordered(d$Hardship_max, levels = c("0","1","2","3","4","5"))
+#d$Hardship_max <- ordered(d$Hardship_max, levels = c("0","1","2","3","4","5"))
 
-d$Hardship_median <- as.integer(d$Hardship_median) 
-d$Hardship_median <- ordered(d$Hardship_median, levels = c("0","1","2","3","4","5"))
+# d$Hardship_median <- as.integer(d$Hardship_median) 
+# d$Hardship_median <- ordered(d$Hardship_median, levels = c("0","1","2","3","4","5"))
 
-d$Min_Incumbent <- ordered(d$Min_Incumbent, levels = c("1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"))
+# d$Min_Incumbent <- ordered(d$Min_Incumbent, levels = c("1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"))
 
-d$Max_Incumbent <- ordered(d$Max_Incumbent, levels = c("1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"))
+# d$Max_Incumbent <- ordered(d$Max_Incumbent, levels = c("1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"))
 
-d$Difference_incumbent <- ordered(d$Difference_incumbent, levels = c("0","1","2","3","4","5","6","7","8","9","10","11","12","13"))
+# d$Difference_incumbent <- ordered(d$Difference_incumbent, levels = c("0","1","2","3","4","5","6","7","8","9","10","11","12","13"))
 ```
+
 
 ```{r}
 # Change to factor
-categories <- c("Organization", "Gender", "Nationality", "DS.Location", "DS.Country", "Family.Non.Family")
+d$Hardship_median <- as.integer(d$Hardship_median) 
+categories <- c("Organization", "Gender", "Nationality", "DS.Location", "DS.Country", "Family.Non.Family", "Age", "Hardship_min","Hardship_max","Hardship_median","Min_Incumbent","Max_Incumbent")
 
 d[ ,categories] <- lapply(d[ ,categories], as.factor)
 ```
@@ -131,6 +134,7 @@ group2 %>% gather() %>% group_by(key) %>% arrange(value) %>%
   theme(legend.position="none")+ xlab(" ")
 
 ```
+
 ```{r}
 group3 %>% gather() %>% group_by(key) %>% arrange(value) %>% 
   ggplot(aes(as.numeric(value), fill = key, color = key)) + geom_bar() + 
@@ -175,18 +179,88 @@ library(MASS)
 ```
 
 ```{r}
-polr_model <- polr(formula = Performance_mean ~ Organization + Gender + Family.Non.Family + Position_Count + Years.of.Service + Age + Max_Incumbent + Hardship_max, data = d, Hess=TRUE)
+set.seed(123)
+# Proportional Odds Logistic Regression for Ordered Category Outcomes
+polr_model <- polr(formula = Performance_mean ~ Organization + Gender + Family.Non.Family + Position_Count + Years.of.Service + Age + Max_Incumbent + Hardship_max, data = d, Hess = TRUE)
 
 summary(polr_model)
 ```
+Accuracy of this model?--> prove why we need to use this model. 
+logistic regression--> multi classification.:  
+
+model as a whole(not a p-value)
+seperate two samples- average age of people - target variable
+two sample fitness?
+
+anova test: different between // does the average value of fraud same between differnet income groups?
+these three groups are different.  
+
+start with baseline model!
+start from logistic regression 90% - svm - k nearest --> decision model. random forest
+--> comparative analysis. 89%
+
+t-test:
+bootstrap:
+
+2. Do you use unsupervised learning techniques such as PCA at work? When do you often use it?  
+when your model overfit...you do demensionality reduction first and then go into model.
+
+Handling the high-dimensional data is very difficult in practice, commonly known as the curse of dimensionality. If the dimensionality of the input dataset increases, any machine learning algorithm and model becomes more complex. As the number of features increases, the number of samples also gets increased proportionally, and the chance of overfitting also increases. If the machine learning model is trained on high-dimensional data, it becomes overfitted and results in poor performance. Hence, it is often required to reduce the number of features, which can be done with dimensionality reduction. It removes the redundant features (if present) by taking care of multicollinearity.
+
+Feature Selection
+Feature selection is the process of selecting the subset of the relevant features and leaving out the irrelevant features present in a dataset to build a model of high accuracy. In other words, it is a way of selecting the optimal features from the input dataset.
+
+Random Forest is a popular and very useful feature selection algorithm in machine learning. This algorithm contains an in-built feature importance package, so we do not need to program it separately.
+  
+ 3. Almost finished Capstone 2, but debating on writing a final report due to time constraint before going back to school. How and when does the final report and ppt became important? during interview, you usually use ppt slide. report: no one might even see.
+ 
+ 
+<things to do>
+1) try @logistic regression model first and then go to more advanced model. (interviewers will be skeptical about why you use more advanced model before even try to use simple model. how do you know if the advanced model is better than simple model?)
+   you CAN use logistic for multiclassification. this is part of interview question as well. 
+2) do ANOVA test/ t-test: which is more common.
+3) try to reduce dimensionality/ feature selection because your model is overfitting. 
+4) make ppt slides. 
+
+[at least do]
+logitstic, knn, svm & t-test
+
+and then ask:
+[Problem- interpreting result of heatmap, no feature selection, variable importance, overfit, metrics]
+just show correlation, without knowing the purpose of it. 
+missed @feature selection part. just used all variables. 
+overfitting problem : 90% on training, 80% on testing --> @dimensionality reduction?
+why do we show variable importance? anything strange about variable importance?
+which metrics do I need to look at in this case? (recall, precision, accuracy)
+how do i answer to the quesion why do u choose random forest?
+ 
+```{r}
+library(car)
+vif(polr_model)
+```
+
+```{r}
+#vif_values <- vif(polr_model)
+#barplot(vif_values, main = "VIF values", horiz = TRUE, col = "steelblue")
+#abline(v = 5, lwd = 3, lty = 2)
+```
+
 
 ```{r}
 #install.packages("brant")
-#library(brant)
-# brant::brant(polr_model)
+library(brant)
+brant(polr_model)
 ```
 # Error in solve.default(D %*% varBeta %*% t(D)) : system is computationally singular: reciprocal condition number = 5.56905e-17
 
+the fact that some of your vectors are (probably) colinear.
+
+It means your design matrix is not invertible and therefore can't be used to develop a regression model. This results from linearly dependent columns, i.e. strongly correlated variables. Examine the pairwise covariance (or correlation) of your variables to investigate if there are any variables that can potentially be removed.You're looking for covariances (or correlations) >> 0. Alternatively, you can probably automate this variable selection by using a forward stepwise regression.
+if you decide to try lasso or stepwise selection, your doing much more (in terms of variable selection) than just handling multicolinearity.
+
+```{r}
+step(polr_model,direction="both")
+```
 
 ```{r}
 str(d$Performance_mean)
@@ -205,7 +279,7 @@ d$three <- ifelse(d$Performance_mean == "3", 1, 0)
 d$four <- ifelse(d$Performance_mean == "4", 1, 0)
 
 d$five <- ifelse(d$Performance_mean == "5", 1, 0)
-
+# --> only five
 ```
 
 
